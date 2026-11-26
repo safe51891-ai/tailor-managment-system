@@ -9,6 +9,8 @@ class IncomeCategory extends Model
 {
     use HasFactory;
 
+    public function incomes() { return $this->hasMany(Income::class); }
+
     protected $fillable=[
         'name'
     ];

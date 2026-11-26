@@ -17,6 +17,8 @@ class Income extends Model
         'amount',
     ];
 
+    public function duePayment() { return $this->hasOne(DuePayment::class, 'income_id'); }
+
     public function incomeCategory(){
         return $this->belongsTo(IncomeCategory::class);
     }

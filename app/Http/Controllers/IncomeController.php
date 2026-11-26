@@ -1,107 +1,44 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Income;
-use Illuminate\Http\Request;
 use App\Models\IncomeCategory;
+use Illuminate\Http\Request;
 
 class IncomeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $title="income";
-        $categories=IncomeCategory::get();
-        $incomes = Income::get();
-        return view('income',compact('title','categories','incomes'));
+        $categories = IncomeCategory::orderBy('name')->get();
+        $period = $request->query('period') === 'monthly' ? 'monthly' : 'weekly';
+        $start = $period === 'monthly' ? now()->startOfMonth() : now()->startOfWeek(1);
+        $incomes = Income::with('incomeCategory', 'duePayment')->whereBetween('income_date', [$start->toDateString(), now()->toDateString()])->orderByDesc('income_date')->get();
+        $total = $incomes->sum('amount');
+        $income = $request->query('edit') ? Income::findOrFail($request->query('edit')) : new Income;
+        return view('income', compact('categories', 'period', 'start', 'incomes', 'total', 'income') + ['title' => 'Income']);
     }
-
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    private function data(Request $request)
+    {
+        $data = $request->validate(['category' => 'required|integer|exists:income_categories,id', 'description' => 'nullable|string|max:100', 'income_date' => 'required|date|before_or_equal:today', 'amount' => 'required|numeric|min:0|max:999999999.99']);
+        return ['income_category_id' => $data['category'], 'description' => $data['description'] ?? null, 'income_date' => $data['income_date'], 'amount' => number_format($data['amount'], 2, '.', '')];
+    }
     public function store(Request $request)
     {
-        $this->validate($request,[
-            'category'=>'required',
-            'description'=>'max:100',
-            'income_date'=>'required',
-            'amount'=>'required',
-        ]);
-        Income::create([
-            'income_category_id'=>$request->category,
-            'description'=>$request->description,
-            'income_date'=>$request->income_date,
-            'amount'=>$request->amount,
-        ]);
-        $notification=array(
-            'message'=>"Income has been added !!!",
-            'alert-type'=>"success",
-        );
-        return back()->with($notification);
+        Income::create($this->data($request));
+        return redirect()->route('income', ['period' => $request->query('period', 'weekly')])->with('message', 'Income recorded.')->with('alert-type', 'success');
     }
-
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function update(Request $request)
     {
-        $this->validate($request,[
-            'category'=>'required',
-            'description'=>'max:100',
-            'income_date'=>'required',
-            'amount'=>'required',
-        ]);
-        $income= Income::find($request->id);
-        $income->update([
-            'income_category_id'=>$request->category,
-            'description'=>$request->description,
-            'income_date'=>$request->income_date,
-            'amount'=>$request->amount,
-        ]);
-        $notification=array(
-            'message'=>"Income has been updated !!!",
-            'alert-type'=>"success",
-        );
-        return back()->with($notification);
+        $request->validate(['id' => 'required|integer']);
+        if (\App\Models\DuePayment::where('income_id', $request->id)->exists()) throw \Illuminate\Validation\ValidationException::withMessages(['id' => 'This income belongs to a due payment and is kept with its payment history.']);
+        Income::findOrFail($request->id)->update($this->data($request));
+        return redirect()->route('income', ['period' => $request->query('period', 'weekly')])->with('message', 'Income updated.')->with('alert-type', 'success');
     }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy(Request $request)
     {
-        $income = Income::find($request->id);
-        $income->delete();
-        $notification=array(
-            'message'=>"Income has been deleted !!!",
-            'alert-type'=>"success",
-        );
-        return back()->with($notification);
+        $request->validate(['id' => 'required|integer']);
+        if (\App\Models\DuePayment::where('income_id', $request->id)->exists()) throw \Illuminate\Validation\ValidationException::withMessages(['id' => 'This income belongs to a due payment and is kept with its payment history.']);
+        Income::findOrFail($request->id)->delete();
+        return back()->with('message', 'Income deleted.')->with('alert-type', 'success');
     }
 }

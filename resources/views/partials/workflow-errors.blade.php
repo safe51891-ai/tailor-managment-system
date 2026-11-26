@@ -1,0 +1,6 @@
+@if ($errors->any())
+<div class="alert alert-danger" role="alert" tabindex="-1" id="form-errors">
+    <strong>Please check these details:</strong>
+    <ul class="mb-0">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
+</div>
+@endif

@@ -1,8 +1,10 @@
 /node_modules
+/desktop/node_modules
 /public/hot
 /public/storage
 /storage/*.key
 /vendor
+/.local
 .env
 .env.backup
 .phpunit.result.cache
@@ -11,3 +13,21 @@ Homestead.json
 Homestead.yaml
 npm-debug.log
 yarn-error.log
+
+/Release
+
+# Generated releases, local data and license signing material
+.DS_Store
+.env.*
+!.env.example
+*.lic
+*.sqlite
+*.sqlite-*
+*.sql
+private-key*.pem
+/Tailor-Shop-Setup-*.exe
+/Tailor-Shop-Setup-*.exe.*
+/Share/
+/output/
+/.playwright-cli/
+/node

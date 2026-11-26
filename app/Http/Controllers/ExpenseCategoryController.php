@@ -28,9 +28,9 @@ class ExpenseCategoryController extends Controller
     public function store(Request $request)
     {
         $this->validate($request,[
-            'name'=>'required|max:200',
+            'name'=>'required|string|max:200',
         ]);
-        ExpenseCategory::create($request->all());
+        ExpenseCategory::create($request->only('name'));
         $notification=array(
             'message'=>"Expense Category has been added !!!",
             'alert-type'=>'success'
@@ -59,9 +59,10 @@ class ExpenseCategoryController extends Controller
     public function update(Request $request)
     {
         $this->validate($request,[
-            'name'=>'required|max:200',
+            'name'=>'required|string|max:200',
         ]);
-        $category = ExpenseCategory::find($request->id);
+        $request->validate(['id' => 'required|integer']);
+        $category = ExpenseCategory::findOrFail($request->id);
         $category->update([
             'name'=>$request->name,
         ]);
@@ -80,7 +81,9 @@ class ExpenseCategoryController extends Controller
      */
     public function destroy(Request $request)
     {
-        $category = ExpenseCategory::find($request->id);
+        $request->validate(['id' => 'required|integer']);
+        $category = ExpenseCategory::findOrFail($request->id);
+        if ($category->is_salary || $category->expenses()->exists()) return back()->with('message', 'Keep the salary category and categories with recorded expenses.')->with('alert-type', 'warning');
         $category->delete();
         $notification=array(
             'message'=>"Expense Category has been deleted !!!",

@@ -1,0 +1,96 @@
+{
+  "name": "tailor-shop-desktop",
+  "productName": "Tailor Shop",
+  "version": "1.0.6",
+  "private": true,
+  "description": "Local desktop launcher for Tailor Shop",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "node launch.cjs",
+    "check": "node --check main.cjs && node --check backend.cjs && node --check backup.cjs && node --check backup-ui.cjs && node --check app-preload.cjs && node --check setup.js && node --check local-data.cjs && node --check license.cjs && node --check license-ui.cjs && node --check license-preload.cjs && node --check license.js",
+    "test": "node --test backend.test.cjs backup.test.cjs license.test.cjs license-startup.test.cjs",
+    "build:win": "node render-icon.cjs && node prepare-build.cjs && electron-builder --win nsis --x64"
+  },
+  "devDependencies": {
+    "@resvg/resvg-js": "2.6.2",
+    "7zip-bin": "5.2.0",
+    "electron": "44.7.0",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.tailorshop.desktop",
+    "productName": "Tailor Shop",
+    "asar": true,
+    "files": [
+      "main.cjs",
+      "backend.cjs",
+      "local-data.cjs",
+      "setup-preload.cjs",
+      "setup.html",
+      "setup.js",
+      "package.json",
+      "backup.cjs",
+      "backup-ui.cjs",
+      "app-preload.cjs",
+      "license.cjs",
+      "license-ui.cjs",
+      "license-preload.cjs",
+      "license-public-key.pem",
+      "license.html",
+      "license.css",
+      "license.js"
+    ],
+    "directories": {
+      "output": "../.local/desktop-dist"
+    },
+    "extraResources": [
+      {
+        "from": "../.local/desktop-stage/shop",
+        "to": "shop"
+      },
+      {
+        "from": "../.local/desktop-stage/php",
+        "to": "php"
+      },
+      {
+        "from": "../.local/desktop-stage/initialize.php",
+        "to": "initialize.php"
+      },
+      {
+        "from": "../.local/desktop-stage/vc_redist.x64.exe",
+        "to": "vc_redist.x64.exe"
+      },
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      },
+      {
+        "from": "backup.php",
+        "to": "backup.php"
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "signAndEditExecutable": false,
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": true,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "include": "build/installer.nsh",
+      "artifactName": "Tailor-Shop-Setup-${version}.exe",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
+    }
+  }
+}

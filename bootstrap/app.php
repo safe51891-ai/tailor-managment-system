@@ -15,6 +15,11 @@ $app = new Illuminate\Foundation\Application(
     $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__)
 );
 
+// Desktop installations keep logs, sessions and uploaded files with local data.
+if ($desktopStorage = getenv('TAILOR_STORAGE_PATH')) {
+    $app->useStoragePath($desktopStorage);
+}
+
 /*
 |--------------------------------------------------------------------------
 | Bind Important Interfaces

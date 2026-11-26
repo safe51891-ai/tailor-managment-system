@@ -14,7 +14,7 @@ class DesignationController extends Controller
      */
     public function index()
     {
-        $title="staff designations";
+        $title="Employee roles";
         $designations = Designation::get();
         return view('designations',compact('title','designations'));
     }
@@ -32,7 +32,7 @@ class DesignationController extends Controller
         ]);
         Designation::create($request->all());
         $notification = array(
-            'message'=>"Staff Designation has been added",
+            'message'=>"Employee role has been added",
             'alert-type'=>'success',
         );
         return back()->with($notification);
@@ -62,7 +62,7 @@ class DesignationController extends Controller
         $designation =Designation::find($request->id);
         $designation->update($request->all());
         $notification = array(
-            'message'=>"Staff Designation has been updated",
+            'message'=>"Employee role has been updated",
             'alert-type'=>'success',
         );
         return back()->with($notification);
@@ -79,7 +79,7 @@ class DesignationController extends Controller
         $designation =Designation::find($request->id);
         $designation->delete();
         $notification = array(
-            'message'=>"Staff Designation has been deleted",
+            'message'=>"Employee role has been deleted",
             'alert-type'=>'success',
         );
         return back()->with($notification);

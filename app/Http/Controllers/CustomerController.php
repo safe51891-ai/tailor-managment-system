@@ -1,86 +1,75 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use App\Models\Customer;
+use App\Rules\PersonName;
+use App\Rules\MobileNumber;
 use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     *
-     * @return \Illuminate\Http\Response
-     */
-    public function index()
+    public function index(Request $request)
     {
-        $title ="Customers";
-        $customers =Customer::get();
-        return view('customers',compact('title','customers'));
+        $search = trim((string) $request->query('search', ''));
+        $phoneSearch = MobileNumber::search($search);
+        $customers = Customer::with('measurements')->when($search !== '', function ($query) use ($search, $phoneSearch) {
+            $query->where(function ($q) use ($search, $phoneSearch) {
+                $q->where('fullname', 'like', "%{$search}%")->orWhere('phone', 'like', "%{$phoneSearch}%");
+            });
+        })->orderBy('fullname')->paginate(20)->withQueryString();
+        return view('customers', ['title' => 'Customers', 'customers' => $customers, 'search' => $search]);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\Response
-     */
+    public function create()
+    {
+        return view('customer-form', ['title' => 'Add customer', 'customer' => new Customer]);
+    }
+
+    public function edit(Customer $customer)
+    {
+        return view('customer-form', ['title' => 'Edit customer', 'customer' => $customer]);
+    }
+
+    protected function data(Request $request, Customer $customer = null)
+    {
+        $data = $request->validate([
+            'fullname' => ['required', 'string', 'max:100', new PersonName],
+            'phone' => ['required', 'string', new MobileNumber],
+            'address' => 'nullable|string|max:200', 'city' => 'nullable|string|max:200',
+            'email' => 'nullable|email|max:255', 'comment' => 'nullable|string|max:1000',
+            'gender' => 'nullable|in:Male,Female,Other',
+        ], [
+
+            'phone.string' => 'Enter a mobile number as text, including any country code.',
+        ], ['fullname' => 'full name', 'phone' => 'phone number']);
+        $data['phone'] = MobileNumber::normalize($data['phone']);
+        foreach (['address', 'city', 'email', 'comment', 'gender'] as $field) {
+            $data[$field] = $data[$field] ?? ($customer && in_array($field, ['city', 'comment', 'email']) ? $customer->$field : '');
+        }
+        return $data;
+    }
+
     public function store(Request $request)
     {
-        $this->validate($request,[
-            'fullname'=>'required|max:100',
-            'address'=>'required|max:200',
-            'phone'=>'required|max:15',
-            'city'=>'required|max:200',
-            'email'=>'required|email',
-            'comment'=>'max:200',
-            'gender'=>'required'
-        ]);
-        Customer::create($request->all());
-        $notification = array(
-            'message'=>"Customer has beed added successfully!!",
-            'alert-type'=>'success'
-        );
-        return back()->with($notification);
+        $customer = Customer::create($this->data($request));
+        return ($request->boolean('order_flow') ? redirect()->route('orders.create', ['customer' => $customer]) : redirect()->route('measurements.index', ['customer' => $customer]))->with('message', 'Customer saved. Enter garment measurements below.')->with('alert-type', 'success');
     }
 
-    /**
-     * Display the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function show($id)
+    public function update(Request $request, Customer $customer)
     {
-        //
+        $customer->update($this->data($request, $customer));
+        return ($request->boolean('order_flow') ? redirect()->route('orders.create', ['customer' => $customer, 'receipt_order' => $request->input('receipt_order')]) : redirect()->route('customers'))
+            ->with('message', 'Customer record updated.')->with('alert-type', 'success');
     }
 
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
     public function destroy(Request $request)
     {
-        $customer = Customer::find($request->id);
+        $request->validate(['id' => 'required|integer']);
+        $customer = Customer::findOrFail($request->id);
+        if ($customer->orders()->withTrashed()->exists()) {
+            return back()->with('message', 'This customer has orders and cannot be deleted.')->with('alert-type', 'warning');
+        }
         $customer->delete();
-        $notification = array(
-            'message'=>"Customer deleted successfully!!!",
-            'alert-type'=>'success',
-        );
-        return back()->with($notification);
+        return back()->with('message', 'Customer deleted.')->with('alert-type', 'success');
     }
 }

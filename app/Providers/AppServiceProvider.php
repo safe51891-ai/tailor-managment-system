@@ -23,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
+        \Illuminate\Support\Facades\View::composer(['layouts.app', 'layouts.auth'], function ($view) {
+            $view->with('shopBranding', \App\Models\ShopProfile::current());
+        });
     }
 }

@@ -30,6 +30,8 @@ use App\Http\Controllers\Auth\RecoverPasswordController;
 |
 */
 
+Route::get('shop-receipt-logo', [\App\Http\Controllers\ShopProfileController::class, 'logo'])->name('shop-profile.logo');
+
 Route::group(['middleware'=>['guest']],function (){
     Route::get('login',[LoginController::class,'index'])->name('login');
     Route::post('login',[LoginController::class,'login']);
@@ -38,16 +40,38 @@ Route::group(['middleware'=>['guest']],function (){
 });
 
 Route::group(['middleware'=>['auth']],function (){
+    Route::get('money-to-receive', [\App\Http\Controllers\DueController::class, 'index'])->name('dues.receivable');
+    Route::get('money-to-pay', [\App\Http\Controllers\DueController::class, 'index'])->name('dues.payable');
+    Route::post('dues', [\App\Http\Controllers\DueController::class, 'store'])->name('dues.store');
+    Route::delete('dues', [\App\Http\Controllers\DueController::class, 'destroy'])->name('dues.destroy');
+    Route::get('dues/{due}', [\App\Http\Controllers\DueController::class, 'show'])->name('dues.show');
+    Route::post('dues/{due}/payments', [\App\Http\Controllers\DueController::class, 'payment'])->name('dues.payment');
+    Route::get('shop-receipt-settings', [\App\Http\Controllers\ShopProfileController::class, 'edit'])->name('shop-profile.edit');
+    Route::put('shop-receipt-settings', [\App\Http\Controllers\ShopProfileController::class, 'update'])->name('shop-profile.update');
+
     Route::get('dashboard',[DashboardController::class,'index'])->name('dashboard');
     Route::get('/',[DashboardController::class,'index']);
     Route::get('logout',[LogoutController::class,'index'])->name('logout');
 
     Route::get('customers',[CustomerController::class,'index'])->name('customers');
     Route::post('customers',[CustomerController::class,'store']);
+    Route::get('customers/create',[CustomerController::class,'create'])->name('customers.create');
+    Route::get('customers/{customer}/edit',[CustomerController::class,'edit'])->name('customers.edit');
+    Route::put('customers/{customer}',[CustomerController::class,'update'])->name('customers.update');
+    Route::get('customers/{customer}/measurements',[CustomerMeasurementController::class,'index'])->name('measurements.index');
+    Route::post('customers/{customer}/measurements',[CustomerMeasurementController::class,'store'])->name('measurements.store');
     Route::delete('customers',[CustomerController::class,'destroy'])->name('customer.destroy');
 
     Route::get('orders',[OrdersController::class,'index'])->name('orders');
     Route::post('orders',[OrdersController::class,'store']);
+    Route::get('orders/create',[OrdersController::class,'create'])->name('orders.create');
+    Route::get('orders/{order}/edit',[OrdersController::class,'edit'])->name('orders.edit');
+    Route::get('orders/{order}/print-options',[OrdersController::class,'printOptions'])->name('orders.print-options');
+    Route::get('orders/{order}/receipt',[OrdersController::class,'receipt'])->name('orders.receipt');
+    Route::get('orders/{order}/tag',[OrdersController::class,'tag'])->name('orders.tag');
+    Route::get('orders/{order}/work-sheet',[OrdersController::class,'workSheet'])->name('orders.work-sheet');
+    Route::get('orders/{order}',[OrdersController::class,'show'])->name('orders.show');
+    Route::put('orders/{order}',[OrdersController::class,'update'])->name('orders.update');
     Route::delete('orders',[OrdersController::class,'destroy'])->name('order.destroy');
 
     Route::get('users',[UserController::class,'index'])->name('users');
@@ -99,9 +123,8 @@ Route::group(['middleware'=>['auth']],function (){
     Route::put('measurement-parts',[MeasurementPartController::class,'update']);
     Route::delete('measurement-parts',[MeasurementPartController::class,'destroy']);
 
-    Route::get('settings',[SettingController::class,'index'])->name('settings');
+    Route::get('settings', function () { return redirect()->route('shop-profile.edit'); })->name('settings');
 
     
 
 });
-

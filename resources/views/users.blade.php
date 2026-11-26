@@ -71,7 +71,7 @@
 										<i class="la la-edit"></i>Edit
 									</a>
 								 	 <div class="dropdown-divider"></div>
-								  	<a data-id="{{$user->id}}" href="javascript:void(0)" aria-haspopup="true" data-toggle="modal" aria-expanded="true" class="dropdown-item deletebtn" data-id="{{$user->id}}">
+        <a data-id="{{$user->id}}" href="javascript:void(0)" aria-haspopup="true"  aria-expanded="true" class="dropdown-item deletebtn" data-label="{{ $user->name }}">
 										<i class="la la-trash"></i>Delete
 									</a>
 								</div>

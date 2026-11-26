@@ -28,9 +28,9 @@ class IncomeCategoryController extends Controller
     public function store(Request $request)
     {
         $this->validate($request,[
-            'name'=>'required|max:200',
+            'name'=>'required|string|max:200',
         ]);
-        IncomeCategory::create($request->all());
+        IncomeCategory::create($request->only('name'));
         $notification=array(
             'message'=>"Income Category has been added !!!",
             'alert-type'=>'success'
@@ -59,9 +59,10 @@ class IncomeCategoryController extends Controller
     public function update(Request $request)
     {
         $this->validate($request,[
-            'name'=>'required|max:200',
+            'name'=>'required|string|max:200',
         ]);
-        $category = IncomeCategory::find($request->id);
+        $request->validate(['id' => 'required|integer']);
+        $category = IncomeCategory::findOrFail($request->id);
         $category->update([
             'name'=>$request->name,
         ]);
@@ -80,7 +81,9 @@ class IncomeCategoryController extends Controller
      */
     public function destroy(Request $request)
     {
-        $category = IncomeCategory::find($request->id);
+        $request->validate(['id' => 'required|integer']);
+        $category = IncomeCategory::findOrFail($request->id);
+        if ($category->incomes()->withTrashed()->exists()) return back()->with('message', 'This category has recorded income and must be retained.')->with('alert-type', 'warning');
         $category->delete();
         $notification=array(
             'message'=>"Income Category has been deleted !!!",

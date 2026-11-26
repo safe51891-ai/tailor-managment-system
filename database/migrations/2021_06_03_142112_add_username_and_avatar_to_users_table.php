@@ -14,7 +14,9 @@ class AddUsernameAndAvatarToUsersTable extends Migration
     public function up()
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('username')->after('email');
+            // SQLite ALTER TABLE requires a non-null default for a required column.
+            // Account creation still validates and supplies a real username.
+            $table->string('username')->default('')->after('email');
             $table->string('avatar')->after('password')->nullable();
         });
     }

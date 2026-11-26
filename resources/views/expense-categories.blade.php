@@ -9,7 +9,7 @@
 <div class="row breadcrumbs-top">
 	<div class="breadcrumb-wrapper col-12">
 		<ol class="breadcrumb">
-			<li class="breadcrumb-item"><a href="{{route('dashboard')}}">Home</a>
+			<li class="breadcrumb-item"><a href="{{route('expenses')}}">Expenses</a>
 			</li>
 			<li class="breadcrumb-item"><a href="javascript:void(0)">Expense Category</a>
 			</li>
@@ -25,6 +25,7 @@
 @endpush
 
 @section('content')
+@include('partials.module-navigation', ['moduleKey' => 'expenses'])
 
 <!-- HTML5 export buttons table -->
 <section id="html5">
@@ -65,7 +66,7 @@
                                   <i class="la la-edit"></i>Edit
                                 </a>
                                   <div class="dropdown-divider"></div>
-                                  <a data-id="{{$category->id}}" href="javascript:void(0)" aria-haspopup="true" data-toggle="modal"  aria-expanded="true" class="dropdown-item deletebtn">
+                                  <a data-id="{{$category->id}}" href="javascript:void(0)" aria-haspopup="true"   aria-expanded="true" class="dropdown-item deletebtn" data-label="{{ $category->name }}">
                                   <i class="la la-trash"></i>Delete
                                 </a>
                               </div>
